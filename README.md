@@ -1,13 +1,45 @@
-# Backend serverless para el proyecto de clase "Company Feedback"
+# Plantilla de un backend de ejemplo usado AWS SAM
 
-## Descripción
+Este es un ejemplo de un backend de una aplicación serverless usando AWS SAM.
 
-El proyecto consiste en desarrollar una plataforma de retroalimentación para empresas, con funcionalidades específicas para los roles de empresa y cliente. Las historias de usuario definidas abarcan desde el registro y autenticación de empresas hasta la creación, edición, y publicación de encuestas, así como la visualización de respuestas por parte de las empresas y la facilidad para que los clientes respondan sin necesidad de registrarse.
+## Recursos
 
-## Arquitectura de la aplicación
+Los recursos que se crean son:
+- Rol de IAM para la función Lambda
+- Función Lambda
+- API Gateway
+- Tabla de DynamoDB
+- Bucket de S3
 
-## Estructura del proyecto
+## Funcionalidad
 
-## Tecnologías
+La API Gateway tiene dos ruta:
+- **POST /path1:** Realiza un CRUD en la tabla de DynamoDB
+- **POST /path2:** Realiza un CRUD en el bucket de S3
 
-## Instalación
+## Tener en cuenta
+
+Antes de desplegar la aplicación se debe tener en cuenta:
+- Cambiar el nombre de los parametros `stack_name` y `s3_prefix` en el archivo `samconfig.toml` por el nombre de tu aplicación.
+- Cambiar el parametro `AppName` en el archivo `samconfig.toml` y `template.yaml` por el nombre de tu aplicación.
+- Cambiar la declaración de los resources en el archivo `template.yaml` por el nombre de tu aplicación:
+  - `AppNameRole`
+  - `AppNameApiGateway`
+  - `AppNameTable`
+  - `AppNameBucket`
+  - `AppNameFunction`
+
+## Instrucciones
+
+> NOTA: Para poder ejecutar los comandos siguientes comandos se debe tener instalado SAM CLI y configurado las credenciales de AWS.
+
+Para construir y desplegar la aplicación se debe ejecutar los siguientes comando:
+```bash
+sam build
+sam deploy
+```
+
+Para eliminar la aplicación se debe ejecutar el siguiente comando:
+```bash
+sam delete
+```

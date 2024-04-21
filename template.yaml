@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  This backend-example-template-aws-sam template demonstrates how to create a
+  backend project using AWS SAM.
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+    Tracing: Active
+
+Parameters:
+  AppName:
+    Type: String
+    Default: app-name
+  AppEnv:
+    Type: String
+    Default: dev
+
+Resources:
+  # ------------- IAM Role -------------
+  AppNameRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AppName}-role-${AppEnv}
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyName: AppNameLogsPolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: "*"
+            Version: 2012-10-17
+        - PolicyName: AppNameDynamoDBPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                Effect: Allow
+                Resource:
+                  - !GetAtt AppNameTable.Arn
+        - PolicyName: AppNameS3Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:DeleteObject
+                Effect: Allow
+                Resource:
+                  - !GetAtt AppNameBucket.Arn
+                  - !Sub ${AppNameBucket.Arn}/*
+
+  # ------------- API Gateway -------------
+  AppNameApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub ${AppEnv}
+
+  # ------------- DynamoDB -------------
+  AppNameTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AppName}-table-${AppEnv}
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  # ------------- S3 -------------
+  AppNameBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AppName}-bucket-${AppEnv}
+      AccessControl: Private
+
+  # ------------- Lambda functions -------------
+  AppNameFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppName}-function-${AppEnv}
+      CodeUri: src/source-code/
+      Handler: app.handler
+      Role: !GetAtt AppNameRole.Arn
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          CORS_ORIGIN: "*"
+          DYNAMODB_TABLE: !Ref AppNameTable
+          S3_BUCKET: !Ref AppNameBucket
+      Events:
+        AppNameFunctionProxy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AppNameApiGateway
+            Method: ANY
+            Path: /{proxy+}
+
+Outputs:
+  AppNameApiGateway:
+    Description: API Gateway endpoint URL for Prod environment
+    Value: !Sub https://${AppNameApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${AppEnv}/

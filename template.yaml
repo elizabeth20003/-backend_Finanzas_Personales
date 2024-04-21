@@ -126,5 +126,5 @@ Resources:
 
 Outputs:
   AppNameApiGateway:
-    Description: API Gateway endpoint URL for Prod environment
+    Description: API Gateway endpoint URL
     Value: !Sub https://${AppNameApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${AppEnv}/

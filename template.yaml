@@ -1,8 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  This backend-example-template-aws-sam template demonstrates how to create a
-  backend project using AWS SAM.
+  sam
 
 Globals:
   Function:
@@ -13,14 +12,14 @@ Globals:
 Parameters:
   AppName:
     Type: String
-    Default: app-name
+    Default: app-financiera
   AppEnv:
     Type: String
     Default: dev
 
 Resources:
   # ------------- IAM Role -------------
-  AppNameRole:
+  AppFinancieraRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub ${AppName}-role-${AppEnv}
@@ -32,7 +31,7 @@ Resources:
               Service: lambda.amazonaws.com
         Version: 2012-10-17
       Policies:
-        - PolicyName: AppNameLogsPolicy
+        - PolicyName: AppFinancieraLogsPolicy
           PolicyDocument:
             Statement:
               - Action:
@@ -42,7 +41,7 @@ Resources:
                 Effect: Allow
                 Resource: "*"
             Version: 2012-10-17
-        - PolicyName: AppNameDynamoDBPolicy
+        - PolicyName: AppFinancieraDynamoDBPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -57,7 +56,7 @@ Resources:
                   - dynamodb:DeleteItem
                 Effect: Allow
                 Resource:
-                  - !GetAtt AppNameTable.Arn
+                  - !GetAtt AppFinancieraTable.Arn
         - PolicyName: AppNameS3Policy
           PolicyDocument:
             Version: 2012-10-17
@@ -69,62 +68,62 @@ Resources:
                   - s3:DeleteObject
                 Effect: Allow
                 Resource:
-                  - !GetAtt AppNameBucket.Arn
-                  - !Sub ${AppNameBucket.Arn}/*
+                  - !GetAtt AppFinancieraBucket.Arn
+                  - !Sub ${AppFinancieraBucket.Arn}/*
 
   # ------------- API Gateway -------------
-  AppNameApiGateway:
+  AppFinancieraApiGateway:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Sub ${AppEnv}
 
   # ------------- DynamoDB -------------
-  AppNameTable:
+  AppFinancieraTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${AppName}-table-${AppEnv}
       AttributeDefinitions:
-        - AttributeName: id
+        - AttributeName: usuario
           AttributeType: S
       KeySchema:
-        - AttributeName: id
+        - AttributeName: usuario
           KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
   # ------------- S3 -------------
-  AppNameBucket:
+  AppFinancieraBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AppName}-bucket-${AppEnv}
       AccessControl: Private
 
   # ------------- Lambda functions -------------
-  AppNameFunction:
+  AppFinancieraFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${AppName}-function-${AppEnv}
       CodeUri: src/source-code/
       Handler: app.handler
-      Role: !GetAtt AppNameRole.Arn
+      Role: !GetAtt AppFinancieraRole.Arn
       Runtime: nodejs18.x
       Architectures:
         - x86_64
       Environment:
         Variables:
           CORS_ORIGIN: "*"
-          DYNAMODB_TABLE: !Ref AppNameTable
-          S3_BUCKET: !Ref AppNameBucket
+          DYNAMODB_TABLE: !Ref AppFinancieraTable
+          S3_BUCKET: !Ref AppFinancieraBucket
       Events:
-        AppNameFunctionProxy:
+        AppFinancieraFunctionProxy:
           Type: Api
           Properties:
-            RestApiId: !Ref AppNameApiGateway
+            RestApiId: !Ref AppFinancieraApiGateway
             Method: ANY
             Path: /{proxy+}
 
 Outputs:
-  AppNameApiGateway:
+  AppFinancieraApiGateway:
     Description: API Gateway endpoint URL
-    Value: !Sub https://${AppNameApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${AppEnv}/
+    Value: !Sub https://${AppFinancieraApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${AppEnv}/

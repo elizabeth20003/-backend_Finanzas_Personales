@@ -21,33 +21,75 @@ const {
 
 const api = express.Router();
 
-api.post("/path1", async (request, response) => {
+// Ruta para crear un nuevo gasto
+api.post("/generar-gastos", async (req, res) => {
   try {
-    console.info("BODY", request.body);
+    const { descripcion, valor, fecha } = req.body;
+
+    // Validaciones...
+
+    
+    await putDynamoDBItem(item);
+
+    return res.status(StatusCodes.OK).json({ msg: "Los datos se han guardado correctamente" });
+  } catch (error) {
+    console.error("Error", error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Internal Server Error" });
+  }
+});
+
+// Ruta para obtener un elemento de DynamoDB
+api.get("/gastos/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await getDynamoDBItem(id);
+
+    if (!item) {
+      return res.status(StatusCodes.NOT_FOUND).json({ msg: "El elemento no existe" });
+    }
+
+    return res.status(StatusCodes.OK).json(item);
+  } catch (error) {
+    console.error("Error", error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Internal Server Error" });
+  }
+});
+
+// Ruta para actualizar un elemento de DynamoDB
+api.put("/gastos/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { descripcion, valor, fecha } = req.body;
+
+    // Validaciones...
 
     const item = {
-      ...request.body,
+      id,
+      descripcion,
+      valor,
+      fecha,
       visible: true,
     };
 
-    // Put the item in DynamoDB
-    await putDynamoDBItem(item);
+    await updateDynamoDBItem(item);
 
-    // Get the item from DynamoDB
-    const dynamoDBItem = await getDynamoDBItem({ id: item.id });
-    console.info(`DynamoDB Item With ID ${item.id}`, dynamoDBItem);
-
-    // Delete the item from DynamoDB
-    await deleteDynamoDBItem({ id: item.id });
-
-    response
-      .status(StatusCodes.OK)
-      .json({ msg: "Hello from path1" });
+    return res.status(StatusCodes.OK).json({ msg: "Los datos se han actualizado correctamente" });
   } catch (error) {
     console.error("Error", error);
-    response
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ msg: "Internal Server Error" });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Internal Server Error" });
+  }
+});
+
+// Ruta para eliminar un elemento de DynamoDB
+api.delete("/gastos/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await deleteDynamoDBItem(id);
+
+    return res.status(StatusCodes.OK).json({ msg: "El elemento ha sido eliminado correctamente" });
+  } catch (error) {
+    console.error("Error", error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Internal Server Error" });
   }
 });
 

@@ -1,9 +1,9 @@
 version = 0.1
 [default.deploy.parameters]
-stack_name = "backend-example-template-aws-sam"
+stack_name = "financia-tu-vida"
 resolve_s3 = true
-s3_prefix = "backend-example-template-aws-sam"
+s3_prefix = "financia-tu-vida"
 region = "us-east-1"
 capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
-parameter_overrides = "AppName=\"app-name\" AppEnv=\"dev\""
+parameter_overrides = "AppName=\"app-financia\" AppEnv=\"dev\""
 image_repositories = []
